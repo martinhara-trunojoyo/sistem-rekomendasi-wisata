@@ -150,9 +150,9 @@ st.markdown(
 )
 
 # load dataset
-data_user = pd.read_csv('dataset_user_aka_responden_lolos_filterfixx.csv')
-data_rating = pd.read_csv('dataset_rating_per_user.csv')
-data_tempat_wisata = pd.read_csv('dataset_tempat_wisata3.csv')
+data_user = pd.read_csv('C:\dataset-SR\dataset_user_aka_responden_lolos_filterfixx.csv')
+data_rating = pd.read_csv('C:\dataset-SR\dataset_rating_per_user.csv')
+data_tempat_wisata = pd.read_csv('C:\dataset-SR\dataset_tempat_wisata3.csv')
 
 st.markdown(
     """
@@ -266,7 +266,7 @@ if asal == "Lamongan":
                                 <h3>{place_row['Nama_Tempat_Wisata']}</h3>
                                 <p><b>Jenis Wisata:</b> {place_row['jenis_wisata']}</p>
                                 <p>{place_row['Deskripsi ']}</p>
-                            <p style="color: #555; font-style: italic;">{reason}</p>
+                                <p style="color: #555; font-style: italic;">{reason}</p>
                             </div>
                         </div>
                         """,
@@ -281,52 +281,50 @@ if asal == "Lamongan":
         if st.button("Lihat Hasil Rekomendasi"):
             st.write("Menampilkan rekomendasi berdasarkan kategori wisata...")
 
-        # Jika pengguna memilih kategori, gunakan kategori tersebut
-        if selected_category:
-            st.write(f"Kategori yang dipilih: {selected_category}")
-            
-            # Ambil tempat wisata berdasarkan kategori yang dipilih pengguna
-            top_places = data_tempat_wisata[data_tempat_wisata["jenis_wisata"] == selected_category]
-        else:
-            # Fallback: Jika tidak ada pilihan, gunakan kategori dengan rating rata-rata tertinggi
-            st.write("Tidak ada kategori yang dipilih, menampilkan kategori populer...")
-            avg_rating_by_category = data_rating.merge(data_tempat_wisata, on="id_tempat_wisata")
-            category_recommendation = avg_rating_by_category.groupby("jenis_wisata")["rating"].mean().sort_values(ascending=False).index[0]
-            st.write(f"Kategori Wisata Populer: {category_recommendation}")
+            # Jika pengguna memilih kategori, gunakan kategori tersebut
+            if selected_category:
+                st.write(f"Kategori yang dipilih: {selected_category}")
+                
+                # Ambil tempat wisata berdasarkan kategori yang dipilih pengguna
+                top_places = data_tempat_wisata[data_tempat_wisata["jenis_wisata"] == selected_category]
+            else:
+                # Fallback: Jika tidak ada pilihan, gunakan kategori dengan rating rata-rata tertinggi
+                st.write("Tidak ada kategori yang dipilih, menampilkan kategori populer...")
+                avg_rating_by_category = data_rating.merge(data_tempat_wisata, on="id_tempat_wisata")
+                category_recommendation = avg_rating_by_category.groupby("jenis_wisata")["rating"].mean().sort_values(ascending=False).index[0]
+                st.write(f"Kategori Wisata Populer: {category_recommendation}")
 
-            # Ambil tempat wisata dari kategori populer
-            top_places = data_tempat_wisata[data_tempat_wisata["jenis_wisata"] == category_recommendation]
+                # Ambil tempat wisata dari kategori populer
+                top_places = data_tempat_wisata[data_tempat_wisata["jenis_wisata"] == category_recommendation]
 
-        # Tampilkan rekomendasi berdasarkan kategori
-        st.subheader("Rekomendasi Tempat Wisata:")
-        if not top_places.empty:
-            for _, place_row in top_places.iterrows():
-                # Alasan untuk kategori wisata
-                reason = f"Tempat wisata ini termasuk dalam kategori '{place_row['jenis_wisata']}' yang paling sesuai dengan preferensi Anda."
+            # Tampilkan rekomendasi berdasarkan kategori
+            st.subheader("Rekomendasi Tempat Wisata:")
+            if not top_places.empty:
+                for _, place_row in top_places.iterrows():
+                    # Alasan untuk kategori wisata
+                    reason = f"Tempat wisata ini termasuk dalam kategori '{place_row['jenis_wisata']}' yang paling sesuai dengan preferensi Anda."
 
-                # Render setiap tempat wisata dengan styling seperti contoh
-                st.markdown(
-                    f"""
-                    <div class="card-container">
-                        <!-- Image Section -->
-                        <div class="card-img">
-                            <img src="{place_row['url_gambar']}" alt="{place_row['Nama_Tempat_Wisata']}">
+                    # Render setiap tempat wisata dengan styling seperti contoh
+                    st.markdown(
+                        f"""
+                        <div class="card-container">
+                            <!-- Image Section -->
+                            <div class="card-img">
+                                <img src="{place_row['url_gambar']}" alt="{place_row['Nama_Tempat_Wisata']}">
+                            </div>
+                            <!-- Text Section -->
+                            <div class="card-text">
+                                <h3>{place_row['Nama_Tempat_Wisata']}</h3>
+                                <p><b>Jenis Wisata:</b> {place_row['jenis_wisata']}</p>
+                                <p>{place_row['Deskripsi ']}</p>
+                                <p style="color: #555; font-style: italic;">{reason}</p>
+                            </div>
                         </div>
-                        <!-- Text Section -->
-                        <div class="card-text">
-                            <h3>{place_row['Nama_Tempat_Wisata']}</h3>
-                            <p><b>Jenis Wisata:</b> {place_row['jenis_wisata']}</p>
-                            <p>{place_row['Deskripsi ']}</p>
-                            <p style="color: #555; font-style: italic;">{reason}</p>
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-        else:
-            st.write("Maaf, tidak ada tempat wisata yang sesuai dengan kategori ini.")
-
-
+                        """,
+                        unsafe_allow_html=True
+                    )
+            else:
+                st.write("Maaf, tidak ada tempat wisata yang sesuai dengan kategori ini.")
 else:
     if asal == "Non Lamongan":
         st.write("Anda berasal dari luar Lamongan.")
@@ -337,73 +335,72 @@ else:
             options=["Pilih Jenis Wisata", "Alam", "Budaya", "Hiburan"]
         )
 
-        if jenis_wisata_preferensi != "Pilih Jenis Wisata":
-            # Filter tempat wisata berdasarkan jenis wisata
-            tempat_wisata_preferensi = data_tempat_wisata[data_tempat_wisata["jenis_wisata"] == jenis_wisata_preferensi]
+        if st.button("Lihat Hasil Rekomendasi"):
+            if jenis_wisata_preferensi != "Pilih Jenis Wisata":
+                # Filter tempat wisata berdasarkan jenis wisata
+                tempat_wisata_preferensi = data_tempat_wisata[data_tempat_wisata["jenis_wisata"] == jenis_wisata_preferensi]
 
-            # Ambil tempat dengan rating rata-rata tertinggi dalam kategori
-            avg_rating = data_rating.groupby("id_tempat_wisata")["rating"].mean().sort_values(ascending=False)
-            rekomendasi_terfilter = avg_rating[avg_rating.index.isin(tempat_wisata_preferensi["id_tempat_wisata"])]
+                # Ambil tempat dengan rating rata-rata tertinggi dalam kategori
+                avg_rating = data_rating.groupby("id_tempat_wisata")["rating"].mean().sort_values(ascending=False)
+                rekomendasi_terfilter = avg_rating[avg_rating.index.isin(tempat_wisata_preferensi["id_tempat_wisata"])]
 
-            # Tampilkan rekomendasi
-            st.subheader(f"Rekomendasi Berdasarkan Jenis Wisata '{jenis_wisata_preferensi}':")
-            for place_id in rekomendasi_terfilter.head(3).index:
-                place_row = data_tempat_wisata[data_tempat_wisata["id_tempat_wisata"] == place_id].iloc[0]
-                rating_avg = rekomendasi_terfilter[place_id]  # Rata-rata rating
+                # Tampilkan rekomendasi
+                st.subheader(f"Rekomendasi Berdasarkan Jenis Wisata '{jenis_wisata_preferensi}':")
+                for place_id in rekomendasi_terfilter.head(3).index:
+                    place_row = data_tempat_wisata[data_tempat_wisata["id_tempat_wisata"] == place_id].iloc[0]
+                    rating_avg = rekomendasi_terfilter[place_id]  # Rata-rata rating
 
-                # Alasan rekomendasi
-                reason = f"Tempat wisata ini memiliki rating rata-rata {rating_avg:.1f} dalam kategori '{jenis_wisata_preferensi}', menjadikannya salah satu pilihan terbaik."
+                    # Alasan rekomendasi
+                    reason = f"Tempat wisata ini memiliki rating rata-rata {rating_avg:.1f} dalam kategori '{jenis_wisata_preferensi}', menjadikannya salah satu pilihan terbaik."
 
-                # Render rekomendasi dalam format HTML dengan styling
-                st.markdown(
-                    f"""
-                    <div class="card-container">
-                        <!-- Image Section -->
-                        <div class="card-img">
-                            <img src="{place_row['url_gambar']}" alt="{place_row['Nama_Tempat_Wisata']}">
+                    # Render rekomendasi dalam format HTML dengan styling
+                    st.markdown(
+                        f"""
+                        <div class="card-container">
+                            <!-- Image Section -->
+                            <div class="card-img">
+                                <img src="{place_row['url_gambar']}" alt="{place_row['Nama_Tempat_Wisata']}">
+                            </div>
+                            <!-- Text Section -->
+                            <div class="card-text">
+                                <h3>{place_row['Nama_Tempat_Wisata']}</h3>
+                                <p><b>Jenis Wisata:</b> {place_row['jenis_wisata']}</p>
+                                <p>{place_row['Deskripsi ']}</p>
+                                <p style="color: #555; font-style: italic;">{reason}</p>
+                            </div>
                         </div>
-                        <!-- Text Section -->
-                        <div class="card-text">
-                            <h3>{place_row['Nama_Tempat_Wisata']}</h3>
-                            <p><b>Jenis Wisata:</b> {place_row['jenis_wisata']}</p>
-                            <p>{place_row['Deskripsi ']}</p>
-                            <p style="color: #555; font-style: italic;">{reason}</p>
+                        """,
+                        unsafe_allow_html=True
+                    )
+            else:
+                # Fallback ke rekomendasi berbasis rating rata-rata
+                st.write("Anda belum memilih preferensi. Menampilkan rekomendasi berdasarkan rating rata-rata tertinggi.")
+                avg_rating = data_rating.groupby("id_tempat_wisata")["rating"].mean().sort_values(ascending=False)
+
+                st.subheader("Rekomendasi Berdasarkan Rating Tertinggi:")
+                for place_id in avg_rating.head(3).index:
+                    place_row = data_tempat_wisata[data_tempat_wisata["id_tempat_wisata"] == place_id].iloc[0]
+                    rating_avg = avg_rating[place_id]  # Rata-rata rating
+
+                    # Alasan rekomendasi fallback
+                    reason = f"Tempat wisata ini memiliki rating rata-rata tertinggi sebesar {rating_avg:.1f}, menjadikannya rekomendasi terbaik secara keseluruhan."
+
+                    # Render fallback rekomendasi dalam format HTML dengan styling
+                    st.markdown(
+                        f"""
+                        <div class="card-container">
+                            <!-- Image Section -->
+                            <div class="card-img">
+                                <img src="{place_row['url_gambar']}" alt="{place_row['Nama_Tempat_Wisata']}">
+                            </div>
+                            <!-- Text Section -->
+                            <div class="card-text">
+                                <h3>{place_row['Nama_Tempat_Wisata']}</h3>
+                                <p><b>Jenis Wisata:</b> {place_row['jenis_wisata']}</p>
+                                <p>{place_row['Deskripsi ']}</p>
+                                <p style="color: #555; font-style: italic;">{reason}</p>
+                            </div>
                         </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-        else:
-            # Fallback ke rekomendasi berbasis rating rata-rata
-            st.write("Anda belum memilih preferensi. Menampilkan rekomendasi berdasarkan rating rata-rata tertinggi.")
-            avg_rating = data_rating.groupby("id_tempat_wisata")["rating"].mean().sort_values(ascending=False)
-
-            st.subheader("Rekomendasi Berdasarkan Rating Tertinggi:")
-            for place_id in avg_rating.head(3).index:
-                place_row = data_tempat_wisata[data_tempat_wisata["id_tempat_wisata"] == place_id].iloc[0]
-                rating_avg = avg_rating[place_id]  # Rata-rata rating
-
-                # Alasan rekomendasi fallback
-                reason = f"Tempat wisata ini memiliki rating rata-rata tertinggi sebesar {rating_avg:.1f}, menjadikannya rekomendasi terbaik secara keseluruhan."
-
-                # Render fallback rekomendasi dalam format HTML dengan styling
-                st.markdown(
-                    f"""
-                    <div class="card-container">
-                        <!-- Image Section -->
-                        <div class="card-img">
-                            <img src="{place_row['url_gambar']}" alt="{place_row['Nama_Tempat_Wisata']}">
-                        </div>
-                        <!-- Text Section -->
-                        <div class="card-text">
-                            <h3>{place_row['Nama_Tempat_Wisata']}</h3>
-                            <p><b>Jenis Wisata:</b> {place_row['jenis_wisata']}</p>
-                            <p>{place_row['Deskripsi ']}</p>
-                            <p style="color: #555; font-style: italic;">{reason}</p>
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-
-
+                        """,
+                        unsafe_allow_html=True
+                    )
