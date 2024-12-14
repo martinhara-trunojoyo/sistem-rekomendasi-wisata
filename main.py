@@ -5,7 +5,7 @@ from io import BytesIO
 import streamlit as st
 
 # Load the CSV file
-data_file = 'C:/dataset-SR/dataset_tempat_wisata3.csv'  # Pastikan path sudah benar
+data_file = 'dataset_tempat_wisata3.csv'  # Pastikan path sudah benar
 data = pd.read_csv(data_file, on_bad_lines='warn')
 
 import streamlit as st
