@@ -150,9 +150,9 @@ st.markdown(
 )
 
 # load dataset
-data_user = pd.read_csv('C:\dataset-SR\dataset_user_aka_responden_lolos_filterfixx.csv')
-data_rating = pd.read_csv('C:\dataset-SR\dataset_rating_per_user.csv')
-data_tempat_wisata = pd.read_csv('C:\dataset-SR\dataset_tempat_wisata3.csv')
+data_user = pd.read_csv('dataset_user_aka_responden_lolos_filterfixx.csv')
+data_rating = pd.read_csv('dataset_rating_per_user.csv')
+data_tempat_wisata = pd.read_csv('dataset_tempat_wisata3.csv')
 
 st.markdown(
     """
