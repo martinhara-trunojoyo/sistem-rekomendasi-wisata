@@ -150,9 +150,9 @@ st.markdown(
 )
 
 # load dataset
-data_user = pd.read_csv('dataset_user_aka_responden_lolos_filterfixx.csv')
-data_rating = pd.read_csv('dataset_rating_per_user.csv')
-data_tempat_wisata = pd.read_csv('dataset_tempat_wisata3.csv')
+data_user = pd.read_csv('C:\dataset-SR\dataset_user_aka_responden_lolos_filterfixx.csv')
+data_rating = pd.read_csv('C:\dataset-SR\dataset_rating_per_user.csv')
+data_tempat_wisata = pd.read_csv('C:\dataset-SR\dataset_tempat_wisata3.csv')
 
 st.markdown(
     """
@@ -168,7 +168,7 @@ st.markdown(
 )
 
 
-# Gunakan kelas CSS yang didefinisikan
+
 st.markdown('<h2 class="centered-title">Isi Data Diri Anda Untuk Mendapatkan Rekomendasi Wisata</h2>', unsafe_allow_html=True)
 # Input pengguna
 asal = st.selectbox("Pilih asal Anda:", ["Lamongan", "Non Lamongan"])
@@ -202,37 +202,134 @@ if asal == "Lamongan":
 
 
             if st.button("Lihat Hasil Rekomendasi"):
-                # Ambil tempat dengan rating rata-rata tertinggi
-                rating_rata_rata = data_rating.groupby("id_tempat_wisata")["rating"].mean().sort_values(ascending=False)
-                # Iterasi melalui top rekomendasi
-                st.subheader("Top Recommendations:")
-                for place_id in rating_rata_rata.head(3).index:
-                    # Ambil data tempat wisata dari dataset
-                    place_row = data_tempat_wisata[data_tempat_wisata["id_tempat_wisata"] == place_id].iloc[0]
-                    rating_avg = rating_rata_rata[place_id]  # Rata-rata rating
-                    
-                    # Tambahkan alasan kenapa masuk top rekomendasi
-                    reason = f"Tempat wisata ini memiliki rating rata-rata tertinggi sebesar {rating_avg:.1f} dibandingkan tempat wisata lainnya."
-                    
-                    # Render HTML untuk setiap rekomendasi
-                    st.markdown(
-                        f"""
-                        <div class="card-container">
-                            <!-- Image Section -->
-                            <div class="card-img">
-                                <img src="{place_row['url_gambar']}" alt="{place_row['Nama_Tempat_Wisata']}">
+   
+                # Ambil rata-rata rating setiap tempat wisata
+                rating_rata_rata = data_rating.groupby("id_tempat_wisata")["rating"].mean()
+
+                #st.subheader("Perhitungan Selisih Kuadrat, Akar, dan Perkalian Matriks Berpasangan:")
+                
+                # Tambahkan kolom baru untuk menyimpan selisih (rating - rata-rata) dan hasil kuadratnya
+                data_rating["rating_minus_mean"] = data_rating.apply(
+                    lambda row: row["rating"] - rating_rata_rata[row["id_tempat_wisata"]],
+                    axis=1
+                )
+                data_rating["squared_diff"] = data_rating["rating_minus_mean"] ** 2  # Kuadratkan selisihnya
+
+                # Totalkan selisih kuadrat
+                total_squared_diff = data_rating["squared_diff"].sum()
+                
+                # Akarkan total selisih kuadrat (RMS - Root Mean Square)
+                rms = total_squared_diff ** 0.5
+
+                # Proses Rating Matrix
+                rating_matrix = data_rating.pivot_table(
+                    index="id_user", 
+                    columns="id_tempat_wisata", 
+                    values="rating"
+                ).fillna(0)
+
+                # Hitung Similarity Matrix
+                similarity_matrix = cosine_similarity(rating_matrix.T)
+                similarity_df = pd.DataFrame(
+                    similarity_matrix, 
+                    index=rating_matrix.columns, 
+                    columns=rating_matrix.columns
+                )
+
+                # Perkalian Matriks Berpasangan
+                multiplied_matrix = similarity_matrix * rms  # Perkalian matriks similarity dengan RMS
+                multiplied_df = pd.DataFrame(
+                    multiplied_matrix, 
+                    index=rating_matrix.columns, 
+                    columns=rating_matrix.columns
+                )
+
+                # Hitung Similarity dari Hasil Perkalian Matriks
+                #st.subheader("Similarity dari Hasil Perkalian Matriks:")
+                similarity_from_multiplied_matrix = cosine_similarity(multiplied_df)
+                similarity_multiplied_df = pd.DataFrame(
+                    similarity_from_multiplied_matrix, 
+                    index=rating_matrix.columns, 
+                    columns=rating_matrix.columns
+                )
+
+                # Tampilkan matriks similarity dari hasil perkalian
+                #st.write("Matrix Similarity dari Hasil Perkalian Matriks:")
+                #st.dataframe(similarity_multiplied_df)
+
+                if 'similarity_multiplied_df' not in locals():
+                    st.warning("Matriks similarity belum dihitung. Hitung matriks similarity terlebih dahulu!")
+                else:
+                    #st.subheader("Prediksi Rating Menggunakan Weighted Average of Deviation")
+
+                    # Dictionary untuk menyimpan hasil prediksi rating
+                    predicted_ratings = {}
+
+                    # Loop melalui semua tempat wisata untuk menghitung prediksi rating
+                    for item_id in similarity_multiplied_df.index:
+                        numerator = 0  # Pembilang
+                        denominator = 0  # Penyebut
+
+                        # Ambil similaritas dengan tempat wisata lainnya
+                        similarity_scores = similarity_multiplied_df[item_id]
+
+                        # Iterasi melalui semua tempat wisata yang dirating oleh user
+                        for rated_item_id in data_rating["id_tempat_wisata"].unique():
+                            # Ambil similarity score dengan tempat wisata lainnya
+                            similarity = similarity_scores[rated_item_id]
+
+                            # Cek apakah tempat wisata memiliki rating
+                            rated_item_ratings = data_rating[data_rating["id_tempat_wisata"] == rated_item_id]
+
+                            if not rated_item_ratings.empty:
+                                # Ambil rata-rata rating user
+                                mean_user_ratings = rated_item_ratings.groupby("id_user")["rating"].mean().to_dict()
+
+                                # Loop untuk semua user yang sudah merating tempat wisata ini
+                                for user_id, rating in rated_item_ratings[["id_user", "rating"]].values:
+                                    deviation = rating - mean_user_ratings[user_id]  # Selisih dari rata-rata user
+                                    numerator += similarity * deviation
+                                    denominator += abs(similarity)
+
+                        # Hitung prediksi rating jika penyebut tidak nol
+                        if denominator != 0:
+                            predicted_rating = rating_rata_rata[item_id] + (numerator / denominator)
+                            predicted_ratings[item_id] = predicted_rating
+
+                    # Tampilkan hasil prediksi rating
+                    #st.subheader("Top Prediksi Rating:")
+                    top_predictions = sorted(predicted_ratings.items(), key=lambda x: x[1], reverse=True)[:5]
+
+                   # Tampilkan rekomendasi dengan prediksi rating
+                    st.subheader("Rekomendasi Tempat Untukmu:")
+
+                    for place_id, pred_rating in top_predictions:
+                        # Ambil data tempat wisata
+                        place_row = data_tempat_wisata[data_tempat_wisata["id_tempat_wisata"] == place_id].iloc[0]
+
+                        # Alasan rekomendasi
+                        reason = f"Prediksi rating untuk tempat wisata ini adalah {pred_rating:.2f}, yang menunjukkan kemungkinan tinggi untuk disukai oleh pengguna seperti Anda."
+
+                        # Render dalam format kartu HTML
+                        st.markdown(
+                            f"""
+                            <div class="card-container">
+                                <!-- Image Section -->
+                                <div class="card-img">
+                                    <img src="{place_row['url_gambar']}" alt="{place_row['Nama_Tempat_Wisata']}">
+                                </div>
+                                <!-- Text Section -->
+                                <div class="card-text">
+                                    <h3>{place_row['Nama_Tempat_Wisata']}</h3>
+                                    <p><b>Jenis Wisata:</b> {place_row['jenis_wisata']}</p>
+                                    <p>{place_row['Deskripsi ']}</p>
+                                    <p class="reason">{reason}</p>
+                                </div>
                             </div>
-                            <!-- Text Section -->
-                            <div class="card-text">
-                                <h3>{place_row['Nama_Tempat_Wisata']}</h3>
-                                <p><b>Jenis Wisata:</b> {place_row['jenis_wisata']}</p>
-                                <p>{place_row['Deskripsi ']}</p>
-                                <p style="color: #555; font-style: italic;">{reason}</p>
-                            </div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
+                            """,
+                            unsafe_allow_html=True
+                        )
+
 
 
         else:
